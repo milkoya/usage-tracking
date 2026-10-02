@@ -45,8 +45,6 @@ Each reply is counted once, even though the logs often write the same reply seve
 
 ## Install
 
-Usage Tracking is in the **milkoya** marketplace, together with [Garden Claude](https://github.com/milkoya/garden-claude):
-
 ```sh
 claude plugin marketplace add milkoya/garden-claude
 claude plugin install usage-tracking@milkoya
