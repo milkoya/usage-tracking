@@ -45,7 +45,16 @@ Each reply is counted once, even though the logs often write the same reply seve
 
 ## Install
 
-Clone this repo into `~/.claude/mods/usage-tracking`:
+Usage Tracking is in the **milkoya** marketplace, together with [Garden Claude](https://github.com/milkoya/garden-claude):
+
+```sh
+claude plugin marketplace add milkoya/garden-claude
+claude plugin install usage-tracking@milkoya
+```
+
+Start a new Claude Code session and run `/usage-tracking` or `/ut`.
+
+**Or by hand:** clone this repo into `~/.claude/mods/usage-tracking`:
 
 ```sh
 git clone https://github.com/milkoya/usage-tracking.git ~/.claude/mods/usage-tracking
@@ -60,8 +69,6 @@ Then either run `claude --plugin-dir ~/.claude/mods`, or add this to `~/.claude/
   }
 }
 ```
-
-Start a new Claude Code session and run `/usage-tracking`.
 
 Usage Tracking is built on Claude Code's **function hooks**, an early-access feature that's still rolling out. If your Claude Code doesn't load it yet, it will once the feature reaches you.
 
