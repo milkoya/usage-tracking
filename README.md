@@ -46,7 +46,7 @@ Each reply is counted once, even though the logs often write the same reply seve
 ## Install
 
 ```sh
-claude plugin marketplace add milkoya/garden-claude
+claude plugin marketplace add milkoya/mods
 claude plugin install usage-tracking@milkoya
 ```
 
