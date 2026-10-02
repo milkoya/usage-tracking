@@ -1,0 +1,18 @@
+{
+  "name": "usage-tracking",
+  "version": "0.1.0",
+  "description": "A side panel with your Claude Code cost and token usage: today, weekly windows, daily charts and per-model detail from local logs",
+  "author": {
+    "name": "Mio"
+  },
+  "homepage": "https://github.com/milkoya/usage-tracking",
+  "repository": "https://github.com/milkoya/usage-tracking",
+  "license": "MIT",
+  "keywords": [
+    "usage",
+    "cost",
+    "tokens",
+    "charts"
+  ],
+  "types": "./types/index.d.ts"
+}
