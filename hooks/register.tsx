@@ -1,5 +1,5 @@
 import { atom, read, update } from 'claude-code'
-import type { EngineInterface, Register } from 'claude-code'
+import type { CommandRunInput, EngineInterface, Register } from 'claude-code'
 
 import type { Ledger, ScanStatus } from '../types'
 import { chartCells, slotLabels, slotWidth } from './chart'
@@ -17,6 +17,7 @@ const status = atom({ plugin: 'usage-tracking', key: 'status' } as const, IDLE)
 const revision = atom({ plugin: 'usage-tracking', key: 'revision' } as const, 0)
 const week = atom({ plugin: 'usage-tracking', key: 'week' } as const, 0)
 const anchor = atom({ plugin: 'usage-tracking', key: 'anchor' } as const, null)
+const inTerminal = atom({ plugin: 'usage-tracking', key: 'inTerminal' } as const, true)
 
 const COMMAND = 'usage-tracking'
 const SHORT_COMMAND = 'ut'
@@ -214,7 +215,8 @@ async function refreshIfOpen($: EngineInterface) {
   else stopRefreshing()
 }
 
-async function openPanel($: EngineInterface) {
+async function openPanel($: EngineInterface, e: Pick<CommandRunInput, 'origin'>) {
+  if (e.origin.kind !== 'composer') return { text: 'The usage panel opens in the Claude Code terminal. Run /ut there.' }
   const opened = await $.ui.open({ id: PANE, title: 'Usage', focus: true, closeOnEscape: true, columns: PANE_COLUMNS, rows: PANE_ROWS })
   startRefreshing($)
   void scan($)
@@ -274,15 +276,17 @@ const statusText = (state: ScanStatus, now: number, isEmpty: boolean): string =>
 
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
+    await update($, inTerminal, () => e.surface === 'terminal')
+    if (e.surface !== 'terminal') return next(e)
     await $.command.register({ name: COMMAND, description: 'Show your Claude Code cost and token usage by day and week', immediate: true })
     await $.command.register({ name: SHORT_COMMAND, description: 'Short for /usage-tracking', immediate: true })
 
     return next(e)
   })
 
-  on('command.run', { command: COMMAND }, $ => openPanel($))
+  on('command.run', { command: COMMAND }, async ($, e, next) => ((await read($, inTerminal)) ? openPanel($, e) : next(e)))
 
-  on('command.run', { command: SHORT_COMMAND }, $ => openPanel($))
+  on('command.run', { command: SHORT_COMMAND }, async ($, e, next) => ((await read($, inTerminal)) ? openPanel($, e) : next(e)))
 
   on('ui.close', ($, e, next) => {
     if (e.id === PANE) stopRefreshing()

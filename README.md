@@ -8,6 +8,8 @@ A side panel that shows what your Claude Code usage costs, day by day and week b
 
 Or just `/ut`. Both open right away, even while Claude is in the middle of a reply.
 
+Usage Tracking runs only in the **Claude Code CLI**. In a session that didn't start in a terminal, like one in the desktop app, it switches itself off and `/usage-tracking` isn't there. When the desktop app or your phone joins a terminal session through Remote Control, typing the command there answers with a short note instead of opening the panel; open it from your terminal.
+
 ## What's in the panel
 
 - **Today, this week and the last 30 days**: cost and tokens, plus when your 7-day limit resets

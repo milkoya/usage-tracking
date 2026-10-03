@@ -1,6 +1,6 @@
 {
   "name": "usage-tracking",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A side panel with your Claude Code cost and token usage: today, weekly windows, daily charts and per-model detail from local logs",
   "author": {
     "name": "Mio"

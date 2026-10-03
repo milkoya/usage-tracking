@@ -225,7 +225,7 @@ const RUN = { origin: { kind: 'composer' }, presentation: { isFullscreen: true, 
 
 type World = { failure?: string; failingLog?: number; isPaneOpen?: boolean; hasLimits?: boolean }
 
-const world = (on: On, spawned: string[], { failure = '', failingLog, isPaneOpen = true, hasLimits = true }: World = {}) => {
+const world = (on: On, spawned: string[], { failure = '', failingLog, isPaneOpen = true, hasLimits = true }: World = {}, registered: string[] = []) => {
   mock.env(on, { HOME: '/home/someone' })
   on('session.start', ($, e) => ({ cwd: e.cwd }))
   on('session.usage', () =>
@@ -233,7 +233,10 @@ const world = (on: On, spawned: string[], { failure = '', failingLog, isPaneOpen
       ? { value: { startedAt: 0, context: { window: 200_000 }, rateLimits: [{ kind: 'seven_day', percentUsed: 40, resetsAt: new Date(AT + 3 * DAY).toISOString() }] } }
       : { deny: 'no usage here' },
   )
-  on('command.register', ($, e) => ({ value: { command: e.name } }))
+  on('command.register', ($, e) => {
+    registered.push(e.name)
+    return { value: { command: e.name } }
+  })
   on('ui.open', () => ({ value: { isPlaced: true } }))
   on('ui.panes', () => ({ value: isPaneOpen ? [{ id: 'usage-tracking', title: 'Usage', isShown: true, isFocused: true, isPlaced: true }] : [] }))
   on('fs.list', ($, e) => {
@@ -356,6 +359,35 @@ describe('the panel', () => {
     const pane = await $.ui.mount(PANE)
     expect(await pane.find({ type: 'Text', text: /^Today\s+\$24\.00\s+2M$/ })).toBeDefined()
     await pane.unmount()
+  })
+
+  test('registers nothing and stays off when the session did not start in a terminal', async ($, on) => {
+    mock.clock(on, { now: AT + HOUR })
+    mock.store(on)
+    const spawned: string[] = []
+    const registered: string[] = []
+    world(on, spawned, {}, registered)
+
+    for (const surface of [null, 'desktop'] as const) {
+      await $.session.start({ cwd: '/tmp', surface, isInteractive: surface !== null })
+    }
+    expect(registered).toEqual([])
+    expect(spawned.length).toBe(0)
+  })
+
+  test('answers in text without opening the panel or reading logs when run outside the terminal', async ($, on) => {
+    const clock = mock.clock(on, { now: AT + HOUR })
+    mock.store(on)
+    const spawned: string[] = []
+    world(on, spawned)
+
+    await $.session.start({ cwd: '/tmp', surface: 'terminal', isInteractive: true })
+    for (const kind of ['bridge', 'sdk'] as const) {
+      const answer = await $.command.run({ ...RUN, origin: { kind } })
+      expect(answer.text).toBe('The usage panel opens in the Claude Code terminal. Run /ut there.')
+    }
+    await clock.settle()
+    expect(spawned.length).toBe(0)
   })
 
   test('keeps scanning when the saved reset time cannot be read, and retries a failed save', async ($, on) => {

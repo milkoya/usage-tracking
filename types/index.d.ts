@@ -13,6 +13,7 @@ declare module 'claude-code' {
       revision: number
       week: number
       anchor: number | null
+      inTerminal: boolean
     }
   }
 }
