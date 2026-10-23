@@ -365,8 +365,9 @@ export const register: Register = on => {
     const pickedColumn = WEEKS_SHOWN - 1 - picked
     const weekLabels = slotLabels(oldestFirst.map(({ window }) => weekLabel(window, weekSlot)), weekSlot)
     const daySlot = slotWidth(columns, 7)
-    const weekSeries = seriesOf(entries, pickedWindow.start, DAY, 7)
-    const todayIndex = Math.floor((now - pickedWindow.start) / DAY)
+    const firstDay = startOfDay(pickedWindow.start)
+    const weekSeries = seriesOf(entries, firstDay, DAY, 7)
+    const todayIndex = Math.floor((now - firstDay) / DAY)
     const tint = (base: number, bright: number) => (_: number, i: number) => (i === todayIndex ? bright : base)
     const titled = (title: string, detail: string) => (
       <Box flexDirection={title.length + detail.length + 2 <= columns ? 'row' : 'column'} marginTop={1}>
@@ -403,7 +404,7 @@ export const register: Register = on => {
     const monthTips = monthSeries.cost.map((cost, i) => tipText(dayLabel(monthStart + i * DAY), cost, monthSeries.tokens[i] ?? 0, monthSlot * MONTH_DAYS))
     const weeklyTips = oldestFirst.map(({ window, totals }) => tipText(`${dateText(window.start)} – ${dateText(window.end)}`, totals.cost, totals.tokens, weekSlot * WEEKS_SHOWN))
     const dayTips = weekSeries.cost.map((cost, i) => {
-      const start = pickedWindow.start + i * DAY
+      const start = firstDay + i * DAY
       return start > now ? `${dayLabel(start)} · not yet` : tipText(dayLabel(start), cost, weekSeries.tokens[i] ?? 0, daySlot * 7)
     })
     const typeRows: [string, number, number][] = [
@@ -443,10 +444,10 @@ export const register: Register = on => {
         <Text>{`${money(detail.cost)} · ${tokenCount(detail.tokens)} tokens`}</Text>
         {titled('Cost per day', peakText(money(Math.max(0, ...weekSeries.cost)), 'today', isPickedNow ? money(weekSeries.cost[todayIndex] ?? 0) : null))}
         {barChart('day-cost', weekSeries.cost, daySlot, weekSeries.cost.map(tint(ORANGE, PEACH)), dayTips)}
-        <Text dimColor>{slotLabels(sliceLabels(pickedWindow.start, 7), daySlot)}</Text>
+        <Text dimColor>{slotLabels(sliceLabels(firstDay, 7), daySlot)}</Text>
         {titled('Tokens per day', peakText(tokenCount(Math.max(0, ...weekSeries.tokens)), 'today', isPickedNow ? tokenCount(weekSeries.tokens[todayIndex] ?? 0) : null))}
         {barChart('day-tokens', weekSeries.tokens, daySlot, weekSeries.tokens.map(tint(BLUE, SKY)), dayTips)}
-        <Text dimColor>{slotLabels(sliceLabels(pickedWindow.start, 7), daySlot)}</Text>
+        <Text dimColor>{slotLabels(sliceLabels(firstDay, 7), daySlot)}</Text>
         {titled('By model', '')}
         {detail.models.length === 0 ? (
           <Text dimColor>No usage this week.</Text>
