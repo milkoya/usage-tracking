@@ -5,7 +5,7 @@ import type { Ledger, Tokens } from '../types'
 import { chartCells, slotLabels, slotWidth } from '../hooks/chart'
 import { modelName, money, span, tokenCount } from '../hooks/format'
 import { DAY, HOUR, HOURLY_DAYS, RECENT_REPLIES, applyFile, bucketKey, emptyLedger, jobsFor, prune } from '../hooks/ledger'
-import { costOf } from '../hooks/prices'
+import { costOf, costsOf } from '../hooks/prices'
 import { WEEK, entriesOf, seriesOf, startOfDay, totalsOf, weekAnchor, weekEnd, windowsOf } from '../hooks/report'
 import { createReader } from '../hooks/scan'
 import type { FileResult, Reply } from '../hooks/scan'
@@ -163,6 +163,7 @@ describe('the report', () => {
   test('prices tokens by model and type', async () => {
     expect(costOf('claude-opus-5-5', [1_000_000, 1_000_000, 1_000_000, 1_000_000, 1_000_000])).toBe(4 + 20 + 5 + 8 + 0.2)
     expect(costOf('claude-haiku-4-5-20251001', [1_000_000, 0, 0, 0, 0])).toBe(1)
+    expect(costsOf('claude-haiku-5-5', [1_000_000, 1_000_000, 1_000_000, 1_000_000, 1_000_000])).toEqual([0.1, 0.5, 0.125, 0.2, 0.01])
     expect(costOf('claude-unknown-9', [1, 1, 1, 1, 1])).toBe(null)
   })
 

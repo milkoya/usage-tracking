@@ -6,6 +6,7 @@ const PER_MILLION: Readonly<Record<string, Rates>> = {
   'claude-fable-5': [10, 50, 12.5, 20, 1],
   'claude-fable-5-1': [10, 50, 12.5, 20, 0.25],
   'claude-haiku-4-5': [1, 5, 1.25, 2, 0.1],
+  'claude-haiku-5-5': [0.1, 0.5, 0.125, 0.2, 0.01],
   'claude-mythos-5': [10, 50, 12.5, 20, 1],
   'claude-mythos-5-1': [10, 50, 12.5, 20, 0.25],
   'claude-mythos-preview': [10, 50, 12.5, 20, 1],
