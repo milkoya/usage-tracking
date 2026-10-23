@@ -6,7 +6,7 @@ import { chartCells, slotLabels, slotWidth } from '../hooks/chart'
 import { modelName, money, span, tokenCount } from '../hooks/format'
 import { DAY, HOUR, HOURLY_DAYS, RECENT_REPLIES, applyFile, bucketKey, emptyLedger, jobsFor, prune } from '../hooks/ledger'
 import { costOf } from '../hooks/prices'
-import { WEEK, entriesOf, seriesOf, totalsOf, weekAnchor, windowsOf } from '../hooks/report'
+import { WEEK, entriesOf, seriesOf, startOfDay, totalsOf, weekAnchor, weekEnd, windowsOf } from '../hooks/report'
 import { createReader } from '../hooks/scan'
 import type { FileResult, Reply } from '../hooks/scan'
 
@@ -193,6 +193,14 @@ describe('the report', () => {
       { start: reset - WEEK, end: reset },
       { start: reset - 2 * WEEK, end: reset - WEEK },
     ])
+  })
+
+  test('ends weeks at midnight on the reset day, or a week later once that midnight has passed', async () => {
+    const reset = AT + 3 * DAY
+    const midnight = startOfDay(reset)
+    expect(weekEnd(reset, AT)).toBe(midnight)
+    expect(weekEnd(midnight, midnight - 1)).toBe(midnight)
+    expect(weekEnd(midnight + HOUR, midnight + 1)).toBe(midnight + WEEK)
   })
 
   test('formats money, tokens, models and time the way the panel shows them', async () => {

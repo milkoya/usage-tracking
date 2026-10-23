@@ -20,7 +20,7 @@ Usage Tracking runs only in the **Claude Code CLI**. In a session that didn't st
 
 Hover any bar to see its exact cost and tokens.
 
-Weeks line up with your 7-day usage limit, so "this week" means the same thing as the `7d` bar. Without a subscription limit, weeks start on Monday.
+Weeks and days run from midnight to midnight, so today's bar matches the Today line. Weeks start on the day your 7-day usage limit resets, or on Monday without a subscription limit.
 
 **Keys:** with the panel focused, **1–8** pick a week, the **arrow keys** scroll and **Esc** closes it.
 
@@ -79,7 +79,7 @@ Usage Tracking is built on Claude Code's **function hooks**, an early-access fea
 | `hooks/scan.ts` | The small shell script that pulls token counts out of the logs (`dd`, `grep` and `awk`) and the reader for its output |
 | `hooks/ledger.ts` | Hourly totals, where each log was read up to, and counting each reply once |
 | `hooks/prices.ts` | API list prices per model |
-| `hooks/report.ts` | Totals, daily and weekly series, and lining weeks up with the 7-day reset |
+| `hooks/report.ts` | Totals, daily and weekly series, and starting weeks at midnight on the 7-day reset day |
 | `hooks/chart.ts` | The bar charts |
 | `hooks/format.ts` | Money, token counts, dates and model names |
 | `hooks/register.tsx` | The command, the panel and when to read the logs |

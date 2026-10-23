@@ -82,3 +82,8 @@ export const startOfDay = (now: number): number => {
   day.setHours(0, 0, 0, 0)
   return day.getTime()
 }
+
+export const weekEnd = (resetAt: number, now: number): number => {
+  const midnight = startOfDay(resetAt)
+  return midnight > now ? midnight : midnight + WEEK
+}

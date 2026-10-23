@@ -3,10 +3,10 @@ import type { CommandRunInput, EngineInterface, Register } from 'claude-code'
 
 import type { Ledger, ScanStatus } from '../types'
 import { chartCells, slotLabels, slotWidth } from './chart'
-import { agoText, dateText, dateTimeText, fit, modelName, money, shortDateText, span, tokenCount, weekdayText } from './format'
+import { agoText, dateText, fit, modelName, money, shortDateText, span, tokenCount, weekdayText } from './format'
 import { DAY, applyFile, emptyLedger, isLedger, jobsFor, prune } from './ledger'
 import type { Listed } from './ledger'
-import { WEEK, entriesOf, seriesOf, startOfDay, totalsOf, weekAnchor, windowsOf } from './report'
+import { WEEK, entriesOf, seriesOf, startOfDay, totalsOf, weekAnchor, weekEnd, windowsOf } from './report'
 import type { Entry, Totals, Window } from './report'
 import { SCAN_ARGV, createReader, jobLines } from './scan'
 import type { FileFailure } from './scan'
@@ -259,8 +259,10 @@ const edgeLabels = (left: string, right: string, columns: number): string =>
 
 const weekLabel = (window: Window, slot: number): string => (slot > dateText(window.start).length ? dateText(window.start) : shortDateText(window.start))
 
+const weekRange = (window: Window): string => `${dateText(window.start)} – ${dateText(window.end - DAY)}`
+
 const weekNumbers = (window: Window, totals: Totals): string =>
-  `${`${dateText(window.start)} – ${dateText(window.end)}`.padEnd(17)}${money(totals.cost).padStart(11)}  ${tokenCount(totals.tokens).padStart(5)}`
+  `${weekRange(window).padEnd(17)}${money(totals.cost).padStart(11)}  ${tokenCount(totals.tokens).padStart(5)}`
 
 const weekOption = (window: Window, ago: number, totals: Totals, columns: number): string => {
   const named = `${weekName(ago).padEnd(12)}${weekNumbers(window, totals)}`
@@ -304,8 +306,9 @@ export const register: Register = on => {
     const now = await $.clock.now()
     const entries = entriesFor(book, current)
     const resetAt = weekAnchor(null, anchorAt, now)
-    const weeks = windowsOf(resetAt, WEEKS_SHOWN).map(window => ({ window, totals: totalsOf(entries, window) }))
-    const currentWindow = { start: resetAt - WEEK, end: resetAt }
+    const weekEndAt = weekEnd(resetAt, now)
+    const weeks = windowsOf(weekEndAt, WEEKS_SHOWN).map(window => ({ window, totals: totalsOf(entries, window) }))
+    const currentWindow = { start: weekEndAt - WEEK, end: weekEndAt }
     const latest = weeks[0] ?? { window: currentWindow, totals: totalsOf(entries, currentWindow) }
     const monthStart = startOfDay(now) - (MONTH_DAYS - 1) * DAY
     const today = totalsOf(entries, { start: startOfDay(now), end: now + DAY })
@@ -365,9 +368,8 @@ export const register: Register = on => {
     const pickedColumn = WEEKS_SHOWN - 1 - picked
     const weekLabels = slotLabels(oldestFirst.map(({ window }) => weekLabel(window, weekSlot)), weekSlot)
     const daySlot = slotWidth(columns, 7)
-    const firstDay = startOfDay(pickedWindow.start)
-    const weekSeries = seriesOf(entries, firstDay, DAY, 7)
-    const todayIndex = Math.floor((now - firstDay) / DAY)
+    const weekSeries = seriesOf(entries, pickedWindow.start, DAY, 7)
+    const todayIndex = Math.floor((now - pickedWindow.start) / DAY)
     const tint = (base: number, bright: number) => (_: number, i: number) => (i === todayIndex ? bright : base)
     const titled = (title: string, detail: string) => (
       <Box flexDirection={title.length + detail.length + 2 <= columns ? 'row' : 'column'} marginTop={1}>
@@ -402,9 +404,9 @@ export const register: Register = on => {
       )
     }
     const monthTips = monthSeries.cost.map((cost, i) => tipText(dayLabel(monthStart + i * DAY), cost, monthSeries.tokens[i] ?? 0, monthSlot * MONTH_DAYS))
-    const weeklyTips = oldestFirst.map(({ window, totals }) => tipText(`${dateText(window.start)} – ${dateText(window.end)}`, totals.cost, totals.tokens, weekSlot * WEEKS_SHOWN))
+    const weeklyTips = oldestFirst.map(({ window, totals }) => tipText(weekRange(window), totals.cost, totals.tokens, weekSlot * WEEKS_SHOWN))
     const dayTips = weekSeries.cost.map((cost, i) => {
-      const start = firstDay + i * DAY
+      const start = pickedWindow.start + i * DAY
       return start > now ? `${dayLabel(start)} · not yet` : tipText(dayLabel(start), cost, weekSeries.tokens[i] ?? 0, daySlot * 7)
     })
     const typeRows: [string, number, number][] = [
@@ -440,14 +442,14 @@ export const register: Register = on => {
             onPress={() => void pickWeek($, String(ago))}
           />
         ))}
-        {titled(weekName(picked), `${dateTimeText(pickedWindow.start)} → ${dateTimeText(pickedWindow.end)}`)}
+        {titled(weekName(picked), weekRange(pickedWindow))}
         <Text>{`${money(detail.cost)} · ${tokenCount(detail.tokens)} tokens`}</Text>
         {titled('Cost per day', peakText(money(Math.max(0, ...weekSeries.cost)), 'today', isPickedNow ? money(weekSeries.cost[todayIndex] ?? 0) : null))}
         {barChart('day-cost', weekSeries.cost, daySlot, weekSeries.cost.map(tint(ORANGE, PEACH)), dayTips)}
-        <Text dimColor>{slotLabels(sliceLabels(firstDay, 7), daySlot)}</Text>
+        <Text dimColor>{slotLabels(sliceLabels(pickedWindow.start, 7), daySlot)}</Text>
         {titled('Tokens per day', peakText(tokenCount(Math.max(0, ...weekSeries.tokens)), 'today', isPickedNow ? tokenCount(weekSeries.tokens[todayIndex] ?? 0) : null))}
         {barChart('day-tokens', weekSeries.tokens, daySlot, weekSeries.tokens.map(tint(BLUE, SKY)), dayTips)}
-        <Text dimColor>{slotLabels(sliceLabels(firstDay, 7), daySlot)}</Text>
+        <Text dimColor>{slotLabels(sliceLabels(pickedWindow.start, 7), daySlot)}</Text>
         {titled('By model', '')}
         {detail.models.length === 0 ? (
           <Text dimColor>No usage this week.</Text>

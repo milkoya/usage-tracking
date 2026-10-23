@@ -1,6 +1,5 @@
 const DOLLARS = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })
 const DATE = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' })
-const TIME = new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' })
 const WEEKDAY = new Intl.DateTimeFormat('en-US', { weekday: 'short' })
 
 const MINUTE = 60_000
@@ -23,8 +22,6 @@ export const shortDateText = (at: number): string => {
   const day = new Date(at)
   return `${day.getMonth() + 1}/${day.getDate()}`
 }
-
-export const dateTimeText = (at: number): string => `${DATE.format(at)} ${TIME.format(at)}`
 
 export const weekdayText = (at: number): string => WEEKDAY.format(at)
 
